@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import chalk from "chalk";
 import { initCommand } from "./commands/init";
 import { fullUpdate, startWatcher } from "./watcher";
