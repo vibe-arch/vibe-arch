@@ -1,0 +1,59 @@
+{
+  "name": "vibe-arch",
+  "version": "0.1.0",
+  "description": "AI-friendly architecture context manager for vibe coding. Automatically manages CLAUDE.md and enforces architecture rules.",
+  "main": "./dist/index.js",
+  "bin": {
+    "vibe-arch": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "types"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vibe-arch/vibe-arch"
+  },
+  "keywords": [
+    "ai",
+    "vibe-coding",
+    "architecture",
+    "claude",
+    "gpt",
+    "context-manager",
+    "cli",
+    "ai-driven",
+    "metadata",
+    "architecture-management"
+  ],
+  "author": "vibe-arch contributors",
+  "bugs": {
+    "url": "https://github.com/vibe-arch/vibe-arch/issues"
+  },
+  "homepage": "https://github.com/vibe-arch/vibe-arch#readme",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc && node scripts/bundle.js",
+    "dev": "ts-node src/index.ts",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"Run 'vibe-arch --help' to verify installation\" && vibe-arch --help"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "inquirer": "^8.2.5",
+    "chalk": "^4.1.2",
+    "openai": "^4.52.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/inquirer": "^8.2.6",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0",
+    "esbuild": "^0.20.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

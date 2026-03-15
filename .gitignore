@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# vibe-arch specific
+.arch-spec.json
+.arch-spec.yaml
+.arch-violations.json
+arch/
+CLAUDE.md
+GEMINI.md
+AI.md
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary
+tmp/
+temp/
