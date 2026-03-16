@@ -37,8 +37,8 @@
   "scripts": {
     "build": "tsc && node scripts/bundle.js",
     "dev": "ts-node src/index.ts",
-    "prepublishOnly": "npm run build",
-    "test": "echo \"Run 'vibe-arch --help' to verify installation\" && vibe-arch --help"
+    "prepublishOnly": "npm test && npm run build",
+    "test": "npx ts-node tests/core.test.ts && npx ts-node tests/ignore.test.ts && npx ts-node tests/cli.test.ts && npx ts-node tests/daemon.test.ts"
   },
   "dependencies": {
     "chokidar": "^3.5.3",

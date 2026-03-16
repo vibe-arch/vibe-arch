@@ -46,14 +46,11 @@ function collectAllSourceFiles(
       // Ignore patterns check
       if (
         IGNORE_PATTERNS.some((pattern) => {
-          const normalized = pattern
-            .replace(/\*\*\//g, "")
-            .replace(/\/\*\*/g, "")
-            .replace(/\*/g, "");
-          return (
-            relativePath.includes(normalized) ||
-            relativePath.startsWith(normalized)
-          );
+          const parts = relativePath.split(path.sep);
+          const patternParts = pattern.split('/').filter(p => p !== '**' && p !== '');
+          
+          // 단순화된 glob 매칭: 패턴의 모든 세그먼트가 경로에 포함되어 있는지 확인
+          return patternParts.every(pp => parts.includes(pp));
         })
       )
         continue;

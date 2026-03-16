@@ -40,10 +40,10 @@ export function parseArchComment(
   filePath: string,
 ): Record<string, string> | null {
   const result: Record<string, string> = {};
-  const blockMatch = content.match(/@arch\n([\s\S]*?)@arch-end/);
+  const blockMatch = content.match(/@arch\r?\n([\s\S]*?)@arch-end/);
   if (!blockMatch) return null;
 
-  const lines = blockMatch[1].split("\n");
+  const lines = blockMatch[1].split(/\r?\n/);
   lines.forEach((line, idx) => {
     const clean = line.replace(/^\s*(\*|#|\/\/)\s*/, "").trim();
     if (!clean) return;
@@ -86,11 +86,11 @@ export function generateArchComment(role: FileRole, ext: string): string {
 function removeExistingComment(content: string, ext: string): string {
   if ([".java", ".kt", ".ts", ".tsx", ".js", ".dart", ".swift"].includes(ext)) {
     return content.replace(
-      /\/\*\*\s*\n[\s\S]*?@arch-end[\s\S]*?\*\/\s*\n*/m,
+      /\/\*\*\s*\r?\n[\s\S]*?@arch-end[\s\S]*?\*\/\s*\r?\n*/m,
       "",
     );
   }
-  return content.replace(/(#|\/\/) @arch\n[\s\S]*?(#|\/\/) @arch-end\n*/m, "");
+  return content.replace(/(#|\/\/) @arch\r?\n[\s\S]*?(#|\/\/) @arch-end\r?\n*/m, "");
 }
 
 let isUpdatingClaude = false;
@@ -210,7 +210,18 @@ export function injectOrUpdateComment(
     if (!fs.existsSync(filePath)) return;
     const originalContent = fs.readFileSync(filePath, "utf-8");
     const cleaned = removeExistingComment(originalContent, ext);
-    const updated = newComment + "\n\n" + cleaned.trimStart();
+    
+    // #1 Shebang 처리: 파일 첫 줄에 #! 가 있으면 그 뒤에 주석 삽입
+    let updated: string;
+    if (cleaned.trimStart().startsWith("#!")) {
+      const firstLineEnd = cleaned.indexOf("\n");
+      const shebang = cleaned.substring(0, firstLineEnd + 1);
+      const rest = cleaned.substring(firstLineEnd + 1);
+      updated = shebang + "\n" + newComment + "\n\n" + rest.trimStart();
+    } else {
+      updated = newComment + "\n\n" + cleaned.trimStart();
+    }
+    
     if (hashContent(originalContent) === hashContent(updated)) return;
     fs.writeFileSync(filePath, updated, "utf-8");
   } catch (e: any) {
