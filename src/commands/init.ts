@@ -116,6 +116,7 @@ export async function initCommand(
     bounded_contexts: [],
     layers: getDefaultLayers(selectedArchitecture, selectedCategory),
     comment_injection: injectionMode as any,
+    ai_hints: true,
     ai_targets: ["CLAUDE.md", "GEMINI.md", "AI.md"],
   };
 

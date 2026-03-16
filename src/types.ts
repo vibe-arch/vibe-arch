@@ -29,6 +29,7 @@ export interface ArchSpec {
   bounded_contexts: string[];
   layers: Record<string, LayerRule>;
   comment_injection?: "inline" | "sidecar" | "disabled";
+  ai_hints?: boolean;
   ai_targets?: string[];
 }
 

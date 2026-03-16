@@ -109,6 +109,53 @@ function hashContent(content: string): string {
   return crypto.createHash("md5").update(content).digest("hex");
 }
 
+/**
+ * [AI-HINT] 함수 시그니처 추출 및 JSDoc 주입 (Regex-based)
+ */
+export function injectOrUpdateMemberHints(filePath: string, rootDir?: string): void {
+  try {
+    const ext = path.extname(filePath);
+    if (![".ts", ".tsx", ".js", ".jsx"].includes(ext)) return;
+
+    let spec: ArchSpec | null = null;
+    if (rootDir) {
+      const specPath = path.join(rootDir, ".arch-spec.json");
+      if (fs.existsSync(specPath)) {
+        spec = JSON.parse(fs.readFileSync(specPath, "utf-8"));
+      }
+    }
+    if (!spec?.ai_hints) return;
+
+    const originalContent = fs.readFileSync(filePath, "utf-8");
+    let content = originalContent;
+
+    // 1. 기존 @ai-hint 주석들 일단 제거 (업데이트를 위해)
+    content = content.replace(/\/\*\*\s*\n\s*\* @ai-hint[\s\S]*?\*\/(\s*\n)/g, "");
+
+    // 2. Export된 함수들 찾기 (정규식: export [async] function name(args): type)
+    // 괄호 중첩 등 복잡한 케이스는 무시하고 일반적인 선언부만 타겟팅
+    const funcRegex = /export\s+(async\s+)?function\s+([a-zA-Z0-9_$]+)\s*\(([\s\S]*?)\)\s*(:\s*([^{]+))?\s*\{/g;
+    
+    let updatedContent = content;
+    let match;
+    let offset = 0;
+
+    // 매칭 결과를 하나씩 돌며 주석 삽입 (거꾸로 돌거나 offset 계산 필요)
+    // 여기서는 간단하게 replace의 콜백을 사용
+    updatedContent = content.replace(funcRegex, (fullMatch, isAsync, name, params, colonType, returnType) => {
+      const cleanParams = params.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+      const cleanReturnType = (returnType || "any").trim();
+      const hint = `/**\n * @ai-hint\n * @param {${cleanParams}}\n * @returns {${cleanReturnType}}\n */\n`;
+      return hint + fullMatch;
+    });
+
+    if (hashContent(originalContent) === hashContent(updatedContent)) return;
+    fs.writeFileSync(filePath, updatedContent, "utf-8");
+  } catch (e: any) {
+    console.error(`[vibe-arch] [ERROR] Failed to inject member hints in ${filePath}: ${e.message}`);
+  }
+}
+
 export function generateClaudeMd(
   spec: ArchSpec,
   recentFile?: string,
@@ -229,8 +276,13 @@ export function injectOrUpdateComment(
       updated = newComment + "\n\n" + cleaned.trimStart();
     }
     
-    if (hashContent(originalContent) === hashContent(updated)) return;
+    if (hashContent(originalContent) === hashContent(updated)) {
+      // @arch 주석은 변하지 않았더라도, 함수 힌트(JSDoc)는 변했을 수 있으므로 별도 호출
+      injectOrUpdateMemberHints(filePath, rootDir);
+      return;
+    }
     fs.writeFileSync(filePath, updated, "utf-8");
+    injectOrUpdateMemberHints(filePath, rootDir);
   } catch (e: any) {
     console.error(
       `[vibe-arch] [ERROR] Failed to update comment in ${filePath}: ${e.message}`,
