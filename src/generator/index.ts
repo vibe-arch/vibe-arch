@@ -194,17 +194,18 @@ export function generateClaudeMd(
     `- Comment Injection: ${spec.comment_injection ?? "enabled"}`,
     "",
     "## AI Behavior Guide",
+    "- **Architectural Responsibility:** You are the primary architect. When creating or modifying a file, you MUST analyze its location and purpose based on the Layer Rules below.",
+    isSidecar
+      ? "- **Autonomous Metadata:** If a sidecar file in `arch/` is missing or outdated, you MUST propose its creation or update following the structure in existing sidecar files."
+      : "- **Autonomous Metadata:** When creating a new source file, you MUST automatically inject an `@arch` block at the top. For JVM languages (Java, Kotlin), place it immediately AFTER the `package` statement.",
     isSidecar
       ? "- **Read Sidecar Metadata First:** Architecture metadata is stored in the `arch/` directory, mirroring the source structure. For example, metadata for `src/main.ts` is in `arch/src/main.ts.md`."
       : "- **Read Metadata First:** Every source file contains an `@arch` ... `@arch-end` metadata block at the top (usually 5-10 lines).",
-    isSidecar
-      ? "- **Context Awareness:** You MUST read the corresponding metadata file in `arch/` before modifying or analyzing a source file to ensure compliance with its specific role and layer rules."
-      : "- **Context Awareness:** You MUST read this block before modifying or analyzing a file to ensure compliance with its specific role and layer rules.",
-    "- **Integrity:** Do not remove, modify, or corrupt the architecture metadata (whether in source comments or sidecar files) unless explicitly instructed to update the architecture.",
+    "- **Integrity:** Do not remove or corrupt existing architecture metadata. If a refactoring changes a file's role, update the metadata accordingly.",
     "",
     "## Layer Rules",
     "",
-    "> These rules define allowed dependencies per layer.",
+    "> Use these rules to determine the 'layer' and 'role' for any file.",
     "> Violations must be fixed by routing through the correct port/interface.",
     "",
   ];
@@ -336,7 +337,13 @@ export function generateAiMd(
     "",
     `This project uses \`vibe-arch\` to maintain architectural integrity. ${platformName === "AI" ? "AI models (Gemini, Claude, etc.)" : platformName} MUST follow these instructions.`,
     "",
-    "## 1. Architecture Metadata (@arch)",
+    "## 1. Architectural Responsibility",
+    "- **AI as Architect:** You are the primary decision-maker for file placement and layer assignment. Analyze the project structure and apply the Layer Rules below to all new or modified files.",
+    isSidecar
+      ? "- **Autonomous Sidecar:** When creating a source file, also propose the corresponding metadata file in `arch/` mirroring the source structure."
+      : "- **In-place Metadata:** You MUST automatically inject an `@arch` metadata block at the top of every new or modified file. For Java/Kotlin, place it after the `package` statement.",
+    "",
+    "## 2. Architecture Metadata (@arch)",
     isSidecar
       ? "- Architecture metadata is stored in the `arch/` directory, mirroring the source structure (e.g., `arch/src/index.ts.md`)."
       : "- Every source file contains an `@arch` metadata block at the top.",
@@ -345,7 +352,7 @@ export function generateAiMd(
       ? `- **Instruction:** Before modifying or analyzing any file, read its corresponding metadata file in \`arch/\` to ensure compliance.`
       : "- **Instruction:** Before modifying or analyzing any file, read this block (usually 5-10 lines) to ensure your changes comply with the project's architecture.",
     "",
-    "## 2. Dependency Rules",
+    "## 3. Dependency Rules",
     isSidecar
       ? "- `forbidden`: You MUST NOT import or depend on these layers/patterns defined in the sidecar metadata."
       : "- `forbidden`: You MUST NOT import or depend on these layers/patterns.",
@@ -356,7 +363,7 @@ export function generateAiMd(
       ? "- If your proposed change requires a new dependency, verify it doesn't violate the rules defined in the metadata."
       : "- If your proposed change requires a new dependency, verify it doesn't violate the rules defined in `@arch`.",
     "",
-    "## 3. Project Overview",
+    "## 4. Project Overview",
     `- Architecture: ${spec.architecture}`,
     `- Category: ${spec.category || "unknown"}`,
     `- Language: ${spec.language}`,
