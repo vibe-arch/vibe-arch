@@ -5,6 +5,30 @@ All notable changes to vibe-arch will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-03-16
+
+### Added
+
+- 🏗️ **Platform Specialization**: New 2-step `init` process with project categories (Server, Client, Mobile, Library).
+- 🧩 **New Architecture Patterns**: 
+  - `fsd` - Feature-Sliced Design for modern frontend.
+  - `atomic` - Atomic Design pattern for UI components.
+  - `none` - Custom/Minimal architecture for full control.
+- 🧪 **Comprehensive Test Suite**: Added core, ignore logic, CLI, and daemon integration tests.
+- 🚀 **CI/CD Integration**: GitHub Actions workflow (Ubuntu/Windows) and `prepublishOnly` safety checks.
+- 📖 **Enhanced AI Guides**: Context-aware guidance for `sidecar` mode and platform-specific rules in `GEMINI.md`, `CLAUDE.md`, and `AI.md`.
+
+### Fixed
+
+- 🛡️ **Shebang Preservation**: Metadata injection no longer breaks executable scripts (`#!`).
+- 📂 **Ignore Pattern Accuracy**: Fixed over-broad path matching that ignored valid files like `distance.ts`.
+- 💻 **Windows Compatibility**: Full support for CRLF line endings in metadata parsing and injection.
+- ⚙️ **CI/CD Fix**: Added `package-lock.json` to repository for stable builds.
+
+### Changed
+
+- 🤖 **Manual First**: Temporarily disabled AI architecture recommendation in favor of manual selection and smart defaults.
+
 ## [0.1.0] - 2026-03-15
 
 ### Added

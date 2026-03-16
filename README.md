@@ -50,10 +50,11 @@ export OPENAI_API_KEY="sk-your-api-key-here"
 
 ## ✨ Key Features
 
-- 🧠 **AI-Driven Deep Scan:** Comprehensively analyzes your project structure to provide context, helping AI (Gemini/Claude) deduce the optimal architecture.
+- 🧠 **AI-Driven Deep Scan:** Comprehensively analyzes your project structure and dependencies to detect the project type (Client, Server, etc.) and recommend the best architecture.
 - 📂 **Flexible Metadata Storage:** Choose between **Inline** injection (metadata inside source code) or **Sidecar** mirroring (metadata kept in a separate directory).
-- 🏗️ **Architecture Guardrails:** Supports Hexagonal, Clean, MVC, Layered, and **Modular** patterns, synchronizing AI context in real time.
-- 📖 **AI Behavior Guide:** Automatically generates instructions that force the AI to read the top metadata (`@arch`) before modifying any file.
+- 🏗️ **Architecture Guardrails:** Supports specialized patterns like **FSD (Feature-Sliced Design)**, **Atomic Design**, **Hexagonal**, **Clean**, **Layered**, and **Modular**, ensuring real-time AI context.
+- 📖 **AI Behavior Guide:** Automatically generates instructions that force the AI to read metadata (Inline or Sidecar) before modifying any file.
+- 🚫 **Custom Architecture:** Use the **None** option to define your own layers or override pre-defined templates in `.arch-spec.json`.
 - 🛠️ **Background Monitoring:** Runs as a daemon to inject architecture info in real time without hogging your terminal.
 
 ---
@@ -145,7 +146,7 @@ export OPENAI_API_KEY="sk-your-api-key-here"
 
 ### 1️⃣ **Initializing a New Project**
 
-#### Scenario: Starting a React project and preparing it for AI collaboration
+#### Scenario: Starting a React project with Feature-Sliced Design (FSD)
 
 ```bash
 # Interactive mode: Make all choices manually
@@ -153,24 +154,24 @@ $ vibe-arch init
 
 [vibe-arch] Analyzing Project: /my-react-app
 
-How would you like to define the architecture pattern?
-  ❯ 🤖 Let AI recommend (requires OPENAI_API_KEY)
-    📋 Choose manually
+? What kind of project is this?
+  ❯ 🌐 Client (Frontend / Mobile)
+    🖥️  Server (Backend)
+    📱 Mobile (Native / Hybrid)
+    🛠️  Library / CLI Tool
 
-(Selected: AI recommend)
-[vibe-arch] Calling AI for architecture recommendation...
+(Selected: Client)
 
-✅ AI recommends: modular
+? Select the architecture pattern for client:
+  ❯ 🔪 FSD (Feature-Sliced Design)
+    ⚛️  Atomic Design
+    📚 Layered (3-tier UI)
+    🧩 Modular (Feature-based)
+    🎬 MVC (Model-View-Controller)
+    🚫 None (Custom / Minimal)
 
-Use modular architecture? (Y/n) (Y)
-
-? Where should architecture metadata be stored?
-  ❯ 📝 Inline (at the top of each source file)
-    📁 Sidecar (mirroring structure in /arch directory)
-    🚫 Disabled (no per-file metadata)
-
-✅ [SUCCESS] Initialized with modular architecture!
-
+✅ [SUCCESS] Initialized with fsd architecture!
+```
 # Generated files:
 # ✓ .arch-spec.json
 # ✓ CLAUDE.md
@@ -435,6 +436,15 @@ $ vibe-arch status
 | Real-time context syncing during active development | `vibe-arch start`             |
 | Checking architecture coverage before deployment    | `vibe-arch status`            |
 | Making data-driven architecture decisions           | `vibe-arch logs --lines 1000` |
+
+### 🧩 **Architecture Matrix**
+
+| Category         | Supported Patterns                                              |
+| :--------------- | :-------------------------------------------------------------- |
+| **🖥️ Server**   | Hexagonal, Clean, Layered, Modular, MVC, None                   |
+| **🌐 Client**   | FSD (Feature-Sliced Design), Atomic Design, Layered, Modular, MVC, None |
+| **📱 Mobile**   | FSD, Atomic Design, Layered, Modular, MVC, None                 |
+| **🛠️ Library**  | Modular, MVC, None                                              |
 
 ---
 
