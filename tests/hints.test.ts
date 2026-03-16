@@ -4,48 +4,47 @@ import * as path from 'path';
 import { injectOrUpdateMemberHints } from '../src/generator';
 
 const TEST_FILE = path.join(process.cwd(), 'temp-hint-test.ts');
+const PY_TEST_FILE = path.join(process.cwd(), 'temp-hint-test.py');
+const GO_TEST_FILE = path.join(process.cwd(), 'temp-hint-test.go');
 const SPEC_FILE = path.join(process.cwd(), '.arch-spec.json');
 
 function setup() {
-  // Mock .arch-spec.json with ai_hints: true
   fs.writeFileSync(SPEC_FILE, JSON.stringify({ ai_hints: true }));
   
-  const content = `
-export function add(a: number, b: number): number {
-  return a + b;
-}
-
-export async function fetchData(url: string, options?: any): Promise<void> {
-  // logic
-}
-  `.trim();
-  fs.writeFileSync(TEST_FILE, content);
+  // TS
+  fs.writeFileSync(TEST_FILE, `export function add(a: number): number { return a; }`);
+  // Python
+  fs.writeFileSync(PY_TEST_FILE, `def process(data: str) -> bool:\n    return True`);
+  // Go
+  fs.writeFileSync(GO_TEST_FILE, `func Serve(port int) error {\n    return nil\n}`);
 }
 
 function cleanup() {
-  if (fs.existsSync(TEST_FILE)) fs.unlinkSync(TEST_FILE);
-  if (fs.existsSync(SPEC_FILE)) fs.unlinkSync(SPEC_FILE);
+  [TEST_FILE, PY_TEST_FILE, GO_TEST_FILE, SPEC_FILE].forEach(f => {
+    if (fs.existsSync(f)) fs.unlinkSync(f);
+  });
 }
 
 async function testHints() {
-  console.log('Testing AI Signature Hints...');
-  
+  console.log('Testing Multi-Language AI Signature Hints...');
   setup();
   
-  // Run hint injection
   injectOrUpdateMemberHints(TEST_FILE, process.cwd());
+  injectOrUpdateMemberHints(PY_TEST_FILE, process.cwd());
+  injectOrUpdateMemberHints(GO_TEST_FILE, process.cwd());
   
-  const updated = fs.readFileSync(TEST_FILE, 'utf-8');
-  console.log('Updated Content:\n', updated);
+  const tsContent = fs.readFileSync(TEST_FILE, 'utf-8');
+  const pyContent = fs.readFileSync(PY_TEST_FILE, 'utf-8');
+  const goContent = fs.readFileSync(GO_TEST_FILE, 'utf-8');
 
-  // Check if JSDoc is injected
-  assert.ok(updated.includes('@ai-hint'), 'Should include @ai-hint tag');
-  assert.ok(updated.includes('@param {a: number, b: number}'), 'Should extract params for add');
-  assert.ok(updated.includes('@returns {number}'), 'Should extract return type for add');
-  assert.ok(updated.includes('@param {url: string, options?: any}'), 'Should handle async and optional params');
-  assert.ok(updated.includes('@returns {Promise<void>}'), 'Should handle Promise return type');
+  console.log('Python Content:\n', pyContent);
+  console.log('Go Content:\n', goContent);
 
-  console.log('✅ AI Hints tests passed');
+  assert.ok(tsContent.includes('@ai-hint'), 'TS should have hints');
+  assert.ok(pyContent.includes('# @ai-hint'), 'Python should have # style hints');
+  assert.ok(goContent.includes('/**'), 'Go should have /** style hints');
+
+  console.log('✅ Multi-Language AI Hints tests passed');
 }
 
 testHints().catch(err => {

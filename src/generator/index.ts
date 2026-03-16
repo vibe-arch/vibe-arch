@@ -115,7 +115,8 @@ function hashContent(content: string): string {
 export function injectOrUpdateMemberHints(filePath: string, rootDir?: string): void {
   try {
     const ext = path.extname(filePath);
-    if (![".ts", ".tsx", ".js", ".jsx"].includes(ext)) return;
+    const SUPPORTED = [".ts", ".tsx", ".js", ".jsx", ".py", ".go", ".java", ".kt", ".dart"];
+    if (!SUPPORTED.includes(ext)) return;
 
     let spec: ArchSpec | null = null;
     if (rootDir) {
@@ -127,27 +128,46 @@ export function injectOrUpdateMemberHints(filePath: string, rootDir?: string): v
     if (!spec?.ai_hints) return;
 
     const originalContent = fs.readFileSync(filePath, "utf-8");
-    let content = originalContent;
+    let updatedContent = originalContent;
 
-    // 1. 기존 @ai-hint 주석들 일단 제거 (업데이트를 위해)
-    content = content.replace(/\/\*\*\s*\n\s*\* @ai-hint[\s\S]*?\*\/(\s*\n)/g, "");
+    // 1. 기존 @ai-hint 제거
+    if (ext === ".py") {
+      updatedContent = updatedContent.replace(/# @ai-hint[\s\S]*?# @ai-hint-end\n*/g, "");
+    } else {
+      updatedContent = updatedContent.replace(/\/\*\*\s*\n\s*\* @ai-hint[\s\S]*?\*\/(\s*\n)*/g, "");
+    }
 
-    // 2. Export된 함수들 찾기 (정규식: export [async] function name(args): type)
-    // 괄호 중첩 등 복잡한 케이스는 무시하고 일반적인 선언부만 타겟팅
-    const funcRegex = /export\s+(async\s+)?function\s+([a-zA-Z0-9_$]+)\s*\(([\s\S]*?)\)\s*(:\s*([^{]+))?\s*\{/g;
-    
-    let updatedContent = content;
-    let match;
-    let offset = 0;
-
-    // 매칭 결과를 하나씩 돌며 주석 삽입 (거꾸로 돌거나 offset 계산 필요)
-    // 여기서는 간단하게 replace의 콜백을 사용
-    updatedContent = content.replace(funcRegex, (fullMatch, isAsync, name, params, colonType, returnType) => {
-      const cleanParams = params.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
-      const cleanReturnType = (returnType || "any").trim();
-      const hint = `/**\n * @ai-hint\n * @param {${cleanParams}}\n * @returns {${cleanReturnType}}\n */\n`;
-      return hint + fullMatch;
-    });
+    // 2. 언어별 추출 로직
+    if ([".ts", ".tsx", ".js", ".jsx"].includes(ext)) {
+      const patterns = [
+        /export\s+(async\s+)?function\s+([a-zA-Z0-9_$]+)\s*\(([\s\S]*?)\)\s*(:\s*([^{]+))?\s*\{/g,
+        /export\s+(const|let|var)\s+([a-zA-Z0-9_$]+)\s*=\s*(async\s*)?\(([\s\S]*?)\)\s*(:\s*([^=]+))?\s*=>/g
+      ];
+      updatedContent = updatedContent.replace(patterns[0], (fullMatch, isAsync, name, params, colonType, returnType) => {
+        const cleanParams = params.replace(/\n/g, " ").replace(/\s+/g, " ").trim() || "void";
+        const cleanReturnType = (returnType || "any").trim();
+        return `/**\n * @ai-hint\n * @param {${cleanParams}}\n * @returns {${cleanReturnType}}\n */\n` + fullMatch;
+      });
+      updatedContent = updatedContent.replace(patterns[1], (fullMatch, kind, name, isAsync, params, colonType, returnType) => {
+        const cleanParams = params.replace(/\n/g, " ").replace(/\s+/g, " ").trim() || "void";
+        const cleanReturnType = (returnType || "any").trim();
+        return `/**\n * @ai-hint\n * @param {${cleanParams}}\n * @returns {${cleanReturnType}}\n */\n` + fullMatch;
+      });
+    } else if (ext === ".py") {
+      const pyPattern = /def\s+([a-zA-Z0-9_$]+)\s*\(([\s\S]*?)\)\s*(->\s*([^:]+))?\s*:/g;
+      updatedContent = updatedContent.replace(pyPattern, (fullMatch, name, params, arrow, returnType) => {
+        const cleanParams = params.replace(/\n/g, " ").replace(/\s+/g, " ").trim() || "void";
+        const cleanReturnType = (returnType || "None").trim();
+        return `# @ai-hint\n# @param {${cleanParams}}\n# @returns {${cleanReturnType}}\n# @ai-hint-end\n` + fullMatch;
+      });
+    } else if (ext === ".go") {
+      const goPattern = /func\s+([a-zA-Z0-9_$]+)\s*\(([\s\S]*?)\)\s*([^{]+)?\s*\{/g;
+      updatedContent = updatedContent.replace(goPattern, (fullMatch, name, params, returnType) => {
+        const cleanParams = params.replace(/\n/g, " ").replace(/\s+/g, " ").trim() || "void";
+        const cleanReturnType = (returnType || "void").trim();
+        return `/**\n * @ai-hint\n * @param {${cleanParams}}\n * @returns {${cleanReturnType}}\n */\n` + fullMatch;
+      });
+    }
 
     if (hashContent(originalContent) === hashContent(updatedContent)) return;
     fs.writeFileSync(filePath, updatedContent, "utf-8");
