@@ -30,94 +30,36 @@ export async function initCommand(
   let selectedArchitecture: ArchitecturePattern | undefined;
 
   if (!isNonInteractive) {
-    // 아키텍처 선택 옵션
-    const { archChoice } = await inquirer.prompt([
+    // [TODO] Re-enable AI recommendation when API setup is complete
+    const { architecture } = await inquirer.prompt([
       {
         type: "list",
-        name: "archChoice",
-        message: "How would you like to define the architecture pattern?",
+        name: "architecture",
+        message: "Select the architecture pattern:",
         choices: [
-          {
-            name: "🤖 Let AI recommend (requires OPENAI_API_KEY)",
-            value: "ai",
-          },
-          { name: "📋 Choose manually", value: "manual" },
+          { name: "🔷 Hexagonal (Ports & Adapters)", value: "hexagonal" },
+          { name: "🧹 Clean Architecture", value: "clean" },
+          { name: "🎬 MVC (Model-View-Controller)", value: "mvc" },
+          { name: "📚 Layered (3-tier)", value: "layered" },
+          { name: "🧩 Modular (Feature-based)", value: "modular" },
         ],
+        default: "layered",
       },
     ]);
-
-    if (archChoice === "ai") {
-      console.log(
-        chalk.blue(
-          "\n[vibe-arch] Calling AI for architecture recommendation...\n",
-        ),
-      );
-      const recommendation = await getAiArchitectureRecommendation(context);
-
-      if (recommendation) {
-        console.log(
-          chalk.green(`✅ AI recommends: ${chalk.bold(recommendation)}\n`),
-        );
-
-        const { confirmArch } = await inquirer.prompt([
-          {
-            type: "confirm",
-            name: "confirmArch",
-            message: `Use ${recommendation} architecture?`,
-            default: true,
-          },
-        ]);
-
-        if (confirmArch) {
-          selectedArchitecture = recommendation;
-        }
-      } else {
-        console.log(
-          chalk.yellow(
-            "\n[INFO] Could not get AI recommendation. Falling back to manual selection...\n",
-          ),
-        );
-      }
-    }
-
-    // AI 실패 시 또는 수동 선택 시
-    if (!selectedArchitecture) {
-      const { architecture } = await inquirer.prompt([
-        {
-          type: "list",
-          name: "architecture",
-          message: "Select the architecture pattern:",
-          choices: [
-            { name: "🔷 Hexagonal (Ports & Adapters)", value: "hexagonal" },
-            { name: "🧹 Clean Architecture", value: "clean" },
-            { name: "🎬 MVC (Model-View-Controller)", value: "mvc" },
-            { name: "📚 Layered (3-tier)", value: "layered" },
-            { name: "🧩 Modular (Feature-based)", value: "modular" },
-          ],
-          default: "layered",
-        },
-      ]);
-      selectedArchitecture = architecture as ArchitecturePattern;
-    }
+    selectedArchitecture = architecture as ArchitecturePattern;
   } else {
-    // 비대화형 모드: --arch 플래그가 있으면 사용, 없으면 AI 추천 시도
+    // 비대화형 모드: --arch 플래그가 있으면 사용, 없으면 스마트 기본값 사용
     if (options.arch) {
       selectedArchitecture = options.arch as ArchitecturePattern;
     } else {
       console.log(
         chalk.blue("[vibe-arch] Analyzing project for optimal architecture..."),
       );
-      const recommendation = await getAiArchitectureRecommendation(context);
-      if (recommendation) {
-        selectedArchitecture = recommendation;
-        console.log(chalk.green(`[vibe-arch] Selected: ${recommendation}\n`));
-      } else {
-        // AI 실패 시 지능형 기본값 선택
-        selectedArchitecture = getSmartDefaultArchitecture(context);
-        console.log(
-          chalk.green(`[vibe-arch] Selected: ${selectedArchitecture}\n`),
-        );
-      }
+      // AI 추천 대신 지능형 기본값 선택 (나중에 AI 기능 복구 시 여기 수정)
+      selectedArchitecture = getSmartDefaultArchitecture(context);
+      console.log(
+        chalk.green(`[vibe-arch] Selected: ${selectedArchitecture}\n`),
+      );
     }
   }
 
