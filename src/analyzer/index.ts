@@ -100,6 +100,12 @@ function collectFiles(
 
 export function detectLanguage(rootDir: string): string {
   if (fs.existsSync(path.join(rootDir, "pom.xml"))) return "java";
+  if (fs.existsSync(path.join(rootDir, "build.gradle")) || fs.existsSync(path.join(rootDir, "build.gradle.kts"))) {
+    // Gradle 프로젝트에서 .kt 파일이 있으면 kotlin으로 우선 순위
+    const tree = collectFiles(rootDir, 10);
+    if (tree.some(f => f.endsWith(".kt") || f.endsWith(".kts"))) return "kotlin";
+    return "java";
+  }
   if (fs.existsSync(path.join(rootDir, "go.mod"))) return "go";
   if (fs.existsSync(path.join(rootDir, "tsconfig.json"))) return "typescript";
   if (fs.existsSync(path.join(rootDir, "package.json"))) return "javascript";
@@ -136,7 +142,7 @@ export function detectBoundedContexts(
 }
 
 export function findSrcDir(rootDir: string): string | null {
-  for (const c of ["src/main/java", "src", "lib", "app", "."]) {
+  for (const c of ["src/main/kotlin", "src/main/java", "src", "lib", "app", "."]) {
     const full = path.join(rootDir, c);
     if (fs.existsSync(full) && fs.statSync(full).isDirectory()) return full;
   }

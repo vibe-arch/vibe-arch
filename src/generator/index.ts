@@ -285,19 +285,34 @@ export function injectOrUpdateComment(
     const originalContent = fs.readFileSync(filePath, "utf-8");
     const cleaned = removeExistingComment(originalContent, ext);
     
-    // #1 Shebang 처리: 파일 첫 줄에 #! 가 있으면 그 뒤에 주석 삽입
     let updated: string;
-    if (cleaned.trimStart().startsWith("#!")) {
+    const trimmedCleaned = cleaned.trimStart();
+
+    // #1 Shebang 처리
+    if (trimmedCleaned.startsWith("#!")) {
       const firstLineEnd = cleaned.indexOf("\n");
       const shebang = cleaned.substring(0, firstLineEnd + 1);
       const rest = cleaned.substring(firstLineEnd + 1);
       updated = shebang + "\n" + newComment + "\n\n" + rest.trimStart();
-    } else {
+    } 
+    // #2 JVM Package 구문 처리 (Java, Kotlin)
+    else if ([".java", ".kt"].includes(ext) && trimmedCleaned.includes("package ")) {
+      const packageMatch = cleaned.match(/package\s+[\w.]+\s*;/);
+      if (packageMatch) {
+        const insertIdx = packageMatch.index! + packageMatch[0].length;
+        const before = cleaned.substring(0, insertIdx);
+        const after = cleaned.substring(insertIdx);
+        updated = before + "\n\n" + newComment + "\n" + after.trimStart();
+      } else {
+        // package 구문이 매칭되지 않으면 맨 위에 주입
+        updated = newComment + "\n\n" + cleaned.trimStart();
+      }
+    }
+    else {
       updated = newComment + "\n\n" + cleaned.trimStart();
     }
     
     if (hashContent(originalContent) === hashContent(updated)) {
-      // @arch 주석은 변하지 않았더라도, 함수 힌트(JSDoc)는 변했을 수 있으므로 별도 호출
       injectOrUpdateMemberHints(filePath, rootDir);
       return;
     }
