@@ -38,7 +38,7 @@
     "build": "tsc && node scripts/bundle.js",
     "dev": "ts-node src/index.ts",
     "prepublishOnly": "npm test && npm run build",
-    "test": "npx ts-node tests/core.test.ts && npx ts-node tests/ignore.test.ts && npx ts-node tests/cli.test.ts && npx ts-node tests/daemon.test.ts"
+    "test": "npx ts-node tests/core.test.ts && npx ts-node tests/ignore.test.ts && npx ts-node tests/cli.test.ts && npx ts-node tests/daemon.test.ts && npx ts-node tests/sidecar.test.ts"
   },
   "dependencies": {
     "chokidar": "^3.5.3",
