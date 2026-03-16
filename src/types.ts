@@ -1,10 +1,15 @@
+export type ProjectCategory = "server" | "client" | "mobile" | "library" | "unknown";
+
 export type ArchitecturePattern =
   | "hexagonal"
   | "clean"
   | "mvc"
   | "layered"
   | "modular"
+  | "fsd"
+  | "atomic"
   | "mixed"
+  | "none"
   | "unknown";
 
 export interface LayerRule {
@@ -18,6 +23,7 @@ export interface LayerRule {
 
 export interface ArchSpec {
   architecture: ArchitecturePattern;
+  category?: ProjectCategory;
   language: string;
   root: string;
   bounded_contexts: string[];
